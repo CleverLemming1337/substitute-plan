@@ -1,8 +1,11 @@
 import sqlite3
 import datetime
 
-connection = sqlite3.Connection("database.sql")
-cursor = connection.cursor()
+def newConnection():
+    return sqlite3.Connection("database.sql")
+
+def newCursor(connection):
+    return connection.cursor()
 
 def newTable(cursor):
     cursor.execute("CREATE TABLE IF NOT EXISTS substitues (date TEXT, class TEXT, hour NUMBER, teacher TEXT, room TEXT, notes TEXT)")
@@ -25,9 +28,12 @@ def filterByDate(data, year, month, day): # could also be a huge list comprehens
             filtered.append(i)
     return filtered
 
-    
-newTable(cursor)
-createEntry(cursor, "10-1-24", "7a", 5, "ABC", "123", "")
-connection.commit()
+if __name__ == "__main__":
+    connection = sqlite3.Connection("database.sql")
+    cursor = connection.cursor()
+        
+    newTable(cursor)
+    createEntry(cursor, "10-1-24", "7a", 5, "ABC", "123", "")
+    connection.commit()
 
-print(filterByDate(getByClass(cursor, "7a"), "24", "1", "9"))
+    print(filterByDate(getByClass(cursor, "7a"), "24", "1", "9"))
