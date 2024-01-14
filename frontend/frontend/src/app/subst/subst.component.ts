@@ -9,10 +9,9 @@ import { Router } from '@angular/router';
   styleUrls: ['./subst.component.scss']
 })
 export class SubstComponent {
+  data: any;
   constructor(private http: HttpService, private router: Router) { 
-    http.getData("http://localhost:8000/subst/class/7a").subscribe((response) => {
-      alert(response);
-    });
+    this.data = JSON.stringify(http.getData("https://shiny-winner-4j67gj6j642jqxj-8000.app.github.dev/subst/class/7a"))
   }
 
   nav(url: string) {

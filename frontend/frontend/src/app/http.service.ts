@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-
+import axios from 'axios';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HttpService {
-
-  constructor(private http: HttpClient) { }
-  getData(url: string) {
-    return this.http.get(url);
+  constructor() { }
+  getData(url: any) {
+    return axios.get(url, {
+      headers: {
+        
+      }
+    });
   }
+  
 }
