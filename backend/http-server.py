@@ -3,26 +3,35 @@ import http.server
 import socketserver
 import json
 
-PORT = 8000
+PORT = 8001
 connection = database.newConnection()
 cursor = database.newCursor(connection)
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET_subst(self, path):
-        print("class", path)
-        if path[0] == "class":
+        print(path)
+        if len(path) == 0:
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            dbresponse = database.getAll(cursor)
+            self.wfile.write(bytes(json.dumps(dbresponse), "ascii"))
+            self.send_response(200)
+        
+        elif path[0] == "class":
             try:
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
+                if len(path) < 2:
+                    self.send_response(400)
+                self.send_header("Content-type", "application/json")
                 self.end_headers()
                 dbresponse = database.getByClass(cursor, path[1])
                 self.wfile.write(bytes(json.dumps(dbresponse), "ascii"))
-                print(bytes(json.dumps(dbresponse), "ascii"))
+                self.send_response(200)
                 
             except Exception as err:
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
                 self.wfile.write(bytes(err.__class__.__name__, "ascii"))
                 self.send_response(400)
+        
     def do_GET(self):
         path = self.path.strip("/").split("/")
         print(path)

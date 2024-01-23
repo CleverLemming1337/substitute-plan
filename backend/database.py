@@ -28,6 +28,10 @@ def filterByDate(data, year, month, day): # could also be a huge list comprehens
             filtered.append(i)
     return filtered
 
+def getAll(cursor):
+    cursor.execute("SELECT rowid, * FROM substitues")
+    return cursor.fetchall()
+
 if __name__ == "__main__":
     connection = sqlite3.Connection("database.sql")
     cursor = connection.cursor()

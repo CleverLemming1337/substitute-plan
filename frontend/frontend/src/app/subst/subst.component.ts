@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 export class SubstComponent {
   data: any;
   constructor(private http: HttpService, private router: Router) { 
-    this.data = JSON.stringify(http.getData("https://shiny-winner-4j67gj6j642jqxj-8000.app.github.dev/subst/class/7a"))
+    this.data = JSON.stringify(http.getData("localhost:8001"))
   }
 
   nav(url: string) {
