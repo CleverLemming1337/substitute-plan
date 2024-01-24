@@ -28,6 +28,13 @@ def filterByDate(data, year, month, day): # could also be a huge list comprehens
             filtered.append(i)
     return filtered
 
+def filterByTeacher(data, teacher): # could also be a huge list comprehension
+    filtered = []
+    for i in data:
+        if i[1] == teacher:
+            filtered.append(i)
+    return filtered
+
 def getAll(cursor):
     cursor.execute("SELECT rowid, * FROM substitues")
     return cursor.fetchall()
