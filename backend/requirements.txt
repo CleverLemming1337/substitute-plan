@@ -1,0 +1,4 @@
+sqlite3
+http.server
+socketserver
+json
