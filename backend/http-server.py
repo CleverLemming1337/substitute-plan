@@ -3,12 +3,11 @@ import http.server
 import socketserver
 import json
 
-PORT = 8001
+PORT = 8000
 connection = database.newConnection()
 cursor = database.newCursor(connection)
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET_subst(self, path):
-        print(path)
         if len(path) == 0:
             self.send_header("Content-type", "application/json")
             self.end_headers()
@@ -50,7 +49,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         
     def do_GET(self):
         path = self.path.strip("/").split("/")
-        print(path)
         if path[0] == "subst":
             try:
                 self.do_GET_subst(path[1:])
@@ -68,8 +66,24 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.do_POST_subst()
     def do_POST_subst(self):
-        print(self.headers)
-        self.send_error(500)
+        try:
+            content_length = int(self.headers['Content-Length'])
+            content = json.loads(self.rfile.read(content_length))
+        except:
+            self.send_error(400)
+            raise
+        if self.headers['Content-Type'] != "application/json":
+            self.send_header("Accept", "application/json")
+            self.send_error(406)
+            return
+        try:
+            database.createEntry(cursor, content['date'], content['class'], content['hour'], content['teacher'], content['room'], content['notes'])
+            connection.commit()
+            self.send_response(200)
+        except KeyError:
+            self.send_error(400)
+
+
 
 
 with socketserver.TCPServer(("", PORT), MyHandler) as httpd:

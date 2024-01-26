@@ -1,0 +1,5 @@
+package-lock.json
+node_modules/
+frontend/frontend/package-lock.json
+frontend/frontend/node_modules/
+backend/__pycache__/
