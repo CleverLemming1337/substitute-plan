@@ -13,6 +13,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             dbresponse = database.getAll(cursor)
             self.wfile.write(bytes(json.dumps(dbresponse), "utf-8"))
+            print(dbresponse)
             self.send_response(200)
         
         elif path[0] == "class":
