@@ -1,13 +1,13 @@
 from flask import Flask, request, jsonify
 import database
 
-app = Flask(__name__)
+application = Flask(__name__)
 
-@app.route('/', methods=['GET'])
+@application.route('/', methods=['GET'])
 def redirect_to_subst():
     return '', 308, {'Location': '/subst'}
 
-@app.route('/subst', methods=['GET'])
+@application.route('/subst', methods=['GET'])
 def get_subst():
     connection = database.newConnection()
     cursor = database.newCursor(connection)
@@ -24,7 +24,7 @@ def get_subst():
     else:
         return '', 400
 
-@app.route('/subst', methods=['POST'])
+@application.route('/subst', methods=['POST'])
 def post_subst():
     connection = database.newConnection()
     cursor = database.newCursor(connection)
@@ -48,7 +48,7 @@ def post_subst():
     else:
         return '', 400
 
-@app.route('/subst', methods=['DELETE'])
+@application.route('/subst', methods=['DELETE'])
 def delete_subst():
     connection = database.newConnection()
     cursor = database.newCursor(connection)
@@ -61,7 +61,7 @@ def delete_subst():
     except KeyError: # not possible
         return '', 400
 
-@app.route('/subst', methods=['PUT'])
+@application.route('/subst', methods=['PUT'])
 def edit_subst():
     connection = database.newConnection()
     cursor = database.newCursor(connection)
@@ -81,4 +81,4 @@ def edit_subst():
             return '', 400
     return '', 200
 if __name__ == '__main__':
-    app.run(port=8000)
+    application.run(port=8000)
