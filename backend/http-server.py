@@ -1,90 +1,84 @@
+from flask import Flask, request, jsonify
 import database
-import http.server
-import socketserver
-import json
-PORT = 8000
-connection = database.newConnection()
-cursor = database.newCursor(connection)
-class MyHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET_subst(self, path):
-        if len(path) == 0:
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
-            dbresponse = database.getAll(cursor)
-            self.wfile.write(bytes(json.dumps(dbresponse), "utf-8"))
-            print(dbresponse)
-            self.send_response(200)
 
-        elif path[0] == "class":
-            try:
-                if len(path) < 2:
-                    self.send_error(400)
-                self.send_header("Content-type", "application/json")
-                self.end_headers()
-                dbresponse = database.getByClass(cursor, path[1])
-                self.wfile.write(bytes(json.dumps(dbresponse), "utf-8"))
-                self.send_response(200)
+app = Flask(__name__)
 
-            except Exception as err:
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-                self.wfile.write(bytes(err.__class__.__name__, "utf-8"))
-                self.send_error(400)
-        elif path[0] == "teacher":
-            try:
-                if len(path) < 2:
-                    self.send_error(400)
-                self.send_header("Content-type", "application/json")
-                self.end_headers()
-                dbresponse = database.getByTeacher(cursor, path[1])
-                self.wfile.write(bytes(json.dumps(dbresponse), "utf-8"))
-                self.send_response(200)
+@app.route('/', methods=['GET'])
+def redirect_to_subst():
+    return '', 308, {'Location': '/subst'}
 
-            except Exception as err:
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-                self.wfile.write(bytes(err.__class__.__name__, "utf-8"))
-                self.send_error(400)
+@app.route('/subst', methods=['GET'])
+def get_subst():
+    connection = database.newConnection()
+    cursor = database.newCursor(connection)
+    x_version = request.headers.get('X-version')
+    if x_version == '1':
+        dbresponse = database.getAll(cursor)
+        return jsonify(dbresponse), 200
+    elif x_version == '2':
+        dbresponse = database.getAll(cursor)
+        print(dbresponse)
+        keys = "id date class lesson subject teacher room notes".split()
+        response = [{k:e[index] for index, k in enumerate(keys)} for e in dbresponse] # e stands for entry and k for key
+        return jsonify(response), 200
+    else:
+        return '', 400
 
-
-    def do_GET(self):
-        path = self.path.strip("/").split("/")
-        if path[0] == "subst":
-            try:
-                self.do_GET_subst(path[1:])
-            except IndexError:
-                self.send_error(400)
-        else:
-            self.send_error(404)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            #self.wfile.write(b"")
-    def do_POST(self):
-        path = self.path.strip("/").split("/")
-        if len(path) == 0 or path[0] != "subst":
-            self.send_error(400)
-        else:
-            self.do_POST_subst()
-    def do_POST_subst(self):
+@app.route('/subst', methods=['POST'])
+def post_subst():
+    connection = database.newConnection()
+    cursor = database.newCursor(connection)
+    x_version = request.headers.get('X-version')
+    if x_version == '1':
         try:
-            content_length = int(self.headers['Content-Length'])
-            content = json.loads(self.rfile.read(content_length))
-        except:
-            self.send_error(400)
-            raise
-        if self.headers['Content-Type'] != "application/json":
-            self.send_header("Accept", "application/json")
-            self.send_error(406)
-            return
-        try:
-            database.createEntry(cursor, content['date'], content['class'], content['hour'], content['teacher'], content['room'], content['notes'])
+            content = request.get_json()
+            database.createEntry(cursor, *content)
             connection.commit()
-            self.send_response(200)
+            return '', 200
         except KeyError:
-            self.send_error(400)
+            return '', 400
+    elif x_version == '2':
+        try:
+            content = request.get_json()
+            database.createEntry(cursor, content['date'], content['class'], content['lesson'], content['subject'], content['teacher'], content['room'], content['notes'])
+            connection.commit()
+            return '', 200
+        except KeyError:
+            return '', 400
+    else:
+        return '', 400
 
+@app.route('/subst', methods=['DELETE'])
+def delete_subst():
+    connection = database.newConnection()
+    cursor = database.newCursor(connection)
+    try:
+        ids = request.get_json()
+        for id in ids:
+            database.deleteEntry(cursor, id)
+        connection.commit()
+        return '', 200
+    except KeyError: # not possible
+        return '', 400
 
-
-with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-    print("Serving at port", PORT)
-    httpd.serve_forever()
+@app.route('/subst', methods=['PUT'])
+def edit_subst():
+    connection = database.newConnection()
+    cursor = database.newCursor(connection)
+    x_version = request.headers.get('X-version')
+    content = request.get_json()
+    if x_version == "1":
+        try:
+            database.updateEntry(cursor, content[0], content[1:])
+            connection.commit()
+        except IndexError:
+            return '', 400
+    elif x_version == "2":
+        try:
+            database.updateEntry(cursor, content['id'], (content['date'], content['class'], content['lesson'], content['subject'], content['teacher'], content['room'], content['notes']))
+            connection.commit()
+        except IndexError:
+            return '', 400
+    return '', 200
+if __name__ == '__main__':
+    app.run(port=8000)
